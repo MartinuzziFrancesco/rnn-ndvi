@@ -1,6 +1,13 @@
 # Learning Extreme Vegetation Response to Climate Forcing: A Comparison of Recurrent Neural Network Architectures
 
+> [!WARNING]
+> This is a research repository, the code contained in here is provided as is.
+
+> [!IMPORTANT]
+> The paper is available on [EGUSphere](https://egusphere.copernicus.org/preprints/2023/egusphere-2023-2368/)
+
 This repository contains the scripts to reproduce the results of the paper: Learning Extreme Vegetation Response to Climate Forcing: A Comparison of Recurrent Neural Network Architectures. This readme provides a brief overview of the contents of the repository. If you need more detailed instructions please contact me at martinuzzi@informatik.uni-leipzig.de.
+
 Folder Structure:
 
   - data: Contains scripts related to data processing.
