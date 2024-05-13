@@ -57,6 +57,7 @@ set_theme!(fullpage_theme)
 
 cut_season = false
 colors = ColorSchemes.seaborn_colorblind
+
 fig = Figure(resolution=(1920, 1080),
     fonts = (; regular = "Arial", bold="Arial bold"),
     fontsize=28,
@@ -65,8 +66,8 @@ fig = Figure(resolution=(1920, 1080),
 ug = fig[1,1] = GridLayout()
 ff = fig[2,1] = GridLayout()
 
-fff = ff[1,1] = GridLayout()
-sff = ff[1,2] = GridLayout()
+#fff = ff[1,1] = GridLayout()
+#sff = ff[1,2] = GridLayout()
 
 fug = ug[1,1] = GridLayout()
 sug = ug[1,2] = GridLayout()
@@ -172,28 +173,24 @@ labels = [models2names[mm] for mm in models]
 elements = [
     MarkerElement(marker=ma,color=colors[im],markersize=24) for (im,ma) in enumerate(markers)
 ]
-Legend(fff[1,1],
-        labelsize = 32,
-        titlesize = 35,
-        elements,
-        labels,
-        "Models",
-        titlefont = :bold,
-        orientation = :horizontal)
-
 
 elemts_b = [
     MarkerElement(marker=ma,color=:black,markersize=32) for (im,ma) in enumerate(markers)
 ]
 
-Legend(sff[1,1],
-        labelsize = 32,
-        titlesize = 35,
-        elemts_b,
-        labels,
-        "Average",
-        titlefont = :bold,
-        orientation = :horizontal)
+legends = [Legend(
+    ff[1,1],
+    [elements, elemts_b],
+    [labels, labels],
+    ["Models", "Average"],
+    labelsize = 32,
+    titlesize = 35,
+    titlefont = :bold,
+    orientation = :horizontal,
+    titleposition = :left,
+    nbanks=2
+)]
+
 lines!(ax2,
     reduce(hcat,cc[1])[1,:],
     reduce(hcat,cc[1])[2,:],
@@ -203,5 +200,5 @@ lines!(ax2,
     reduce(hcat,newcc2)[1,:],
     reduce(hcat,newcc2)[2,:],
     color=:grey)
-
+fig
 save("ec.eps", fig,dpi=300)
