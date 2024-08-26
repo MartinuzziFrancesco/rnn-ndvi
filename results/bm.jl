@@ -98,13 +98,6 @@ for (aidx,metric) in enumerate(titles)
             marker=markers[midx]
         )
 
-        if (model == "ESN") && (metric == "pofd")
-            @show errors[aidx][:,midx]
-            errors[aidx][:,midx] *= 4
-        elseif (model == "ESN") && (metric == "pofd")
-            errors[aidx][:,midx] *= 4
-        end
-
         errorbars!(max, percentiles, results[aidx][:,midx], errors[aidx][:,midx],
             color=colors[midx],
             linewidth = 2,
