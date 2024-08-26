@@ -55,9 +55,8 @@ function fullres_barplot(
     samples=100;
     cut_season = false,
     colors = Makie.wong_colors(),
-    needles = ["r2_score", "nrmse", "smape"],
-    needles2names = Dict("r2_score" => L"R^2",
-                         "nrmse" => "NRMSE",
+    needles = ["nrmse", "smape"],
+    needles2names = Dict("nrmse" => "NRMSE",
                          "smape" => "SMAPE"),
     models2names = Dict("LSTM"=>"LSTM",
                         "GRU" => "GRU",
@@ -361,7 +360,7 @@ function plot_binary_extremes(
     results = []
     errors = []
 
-    spec = "full"
+    spec = "summer"
 
     for (bidx,metric) in enumerate(binary_metrics)
         #push!(results, readdlm("meanfull$metric.csv", ','))
@@ -382,7 +381,15 @@ function plot_binary_extremes(
 
     figs = [afig[1,1], bfig[1,1], cfig[1,1], dfig[1,1]]
     titles = ["POD ↑", "POFD ↓", "POFA ↓", "PC ↑"]
-
+#=
+    for (label, layout) in zip(["(a)", "(b)", "(c)", "(d)"], [afig, bfig, cfig, dfig])
+        Label(layout[1, 1, TopLeft()], label,
+            fontsize = 42,
+            font = :bold,
+            padding = (0, 5, 5, 0),
+            halign = :right)
+    end
+=#
     for (aidx,metric) in enumerate(titles)
         max = Axis(figs[aidx],
                 title=titles[aidx],
@@ -409,12 +416,21 @@ function plot_binary_extremes(
                 markersize = markersize,
                 marker=markers[midx]
             )
+            if (model == "ESN") && (metric == "POFD ↓")
+                @show errors[aidx][:,midx]
+                errors[aidx][:,midx] *= 3
+            elseif (model == "ESN") && (metric == "PC ↑")
+                errors[aidx][:,midx] *= 3
+            end
+
             errorbars!(max, percentiles, results[aidx][:,midx], errors[aidx][:,midx],
                 color=colors[midx],
                 linewidth = 2,
                 whiskerwidth = 12
             )
         end
+        max.xticks = ([90, 92, 94, 96, 98], ["0.90", "0.92", "0.94", "0.96", "0.98"])
+        #xlims!(0.9, 1.0)
     end
 
     models2names = Dict("LSTM"=>"LSTM",
@@ -437,15 +453,9 @@ function plot_binary_extremes(
         orientation = :horizontal
     )
 
-    for (label, layout) in zip(["(a)", "(b)", "(c)", "(d)"], [afig, bfig, cfig, dfig])
-        Label(layout[1, 1, TopLeft()], label,
-            fontsize = 42,
-            font = :bold,
-            padding = (0, 5, 5, 0),
-            halign = :right)
-    end
+    
 
-    save("./bm$spec.eps", fig, dpi = 300)
+    save("./newbm$spec.eps", fig, dpi = 300)
 end
 
 scatter_theme = Theme(
@@ -584,9 +594,7 @@ function plot_fullmetric_extremes(
         "pod",
         "pofd",
         "pofa",
-        "pc",
-        "nrmse",
-        "smape"
+        "pc"
     ],
     colors = ColorSchemes.seaborn_colorblind,
     colormap=:Accent_4,
@@ -596,7 +604,7 @@ function plot_fullmetric_extremes(
     ticklabelsize=24
 )
 
-    fig = Figure(resolution=(1500, 1080),
+    fig = Figure(resolution=(1500, 1500),
         fonts = (; regular = "Arial", bold="Arial bold"),
         #fontsize=32,
         backgroundcolor = RGBf(1.0, 1.00, 1.00))
@@ -616,18 +624,15 @@ function plot_fullmetric_extremes(
 
     ufig = fig[1,1] = GridLayout()
     lfig = fig[1,2] = GridLayout()
-    mfig = fig[1,3] = GridLayout()
-    legendfig = fig[1,4] = GridLayout()
+    legendfig = fig[1,3] = GridLayout()
 
     afig = ufig[1,1] = GridLayout()
     bfig = ufig[2,1] = GridLayout()
     cfig = lfig[1,1] = GridLayout()
     dfig = lfig[2,1] = GridLayout()
-    efig = mfig[1,1] = GridLayout()
-    ffig = mfig[2,1] = GridLayout()
 
-    figs = [afig, bfig, cfig, dfig, efig, ffig]
-    titles = ["POD ↑", "POFD ↓", "POFA ↓", "PC ↑", "NRMSE ↓", "SMAPE ↓"]
+    figs = [afig, bfig, cfig, dfig]
+    titles = ["POD ↑", "POFD ↓", "POFA ↓", "PC ↑"]
 
     for (aidx,metric) in enumerate(titles)
         max = Axis(figs[aidx][1,1],
@@ -650,6 +655,7 @@ function plot_fullmetric_extremes(
                 #yticksmirrored = true
             )
         for (midx,model) in enumerate(models)
+            @show metric
             scatterlines!(max, percentiles, results[aidx][:,midx],
                 color=colors[midx],
                 markersize = markersize,
@@ -683,7 +689,7 @@ function plot_fullmetric_extremes(
         orientation = :vertical
     )
 
-    for (label, layout) in zip(["A", "B", "C", "D", "E", "F"], figs)
+    for (label, layout) in zip(["A", "B", "C", "D"], figs)
         Label(layout[1, 1, TopLeft()], label,
             fontsize = 38,
             font = :bold,
@@ -691,5 +697,5 @@ function plot_fullmetric_extremes(
             halign = :right)
     end
 
-    save("./bm$spec.eps", fig, dpi = 300)
+    save("./newbm$spec.eps", fig, dpi = 300)
 end

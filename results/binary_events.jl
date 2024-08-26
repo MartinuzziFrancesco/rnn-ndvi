@@ -1,8 +1,8 @@
 ### BinaryValues
 struct BinaryValues
-    hits::Int
-    false_alarms::Int
-    misses::Int
+    hits::Int #true positives
+    false_alarms::Int #false positives
+    misses::Int #false negatives
     correct_rejections::Int
     tot::Int
 end
@@ -20,6 +20,7 @@ pofd(bv::BinaryValues) = _pofd(bv.false_alarms, bv.correct_rejections)
 pofa(bv::BinaryValues) = _pofa(bv.false_alarms, bv.hits)
 pc(bv::BinaryValues) = _pc(bv.hits, bv.correct_rejections, bv.tot)
 fbias(bv::BinaryValues) = _fbias(bv.hits, bv.misses, bv.false_alarms)
+fscore(bv::BinaryValues) = _fscore(bv.hits, bv.false_alarms, bv.misses)
 
 
 function _base_rate(hits, misses, tot)
@@ -52,6 +53,10 @@ end
 
 function auc(bv::BinaryValues)
     return (1+pod(bv)-pofd(bv))/(2)
+end
+
+function _fscore(tp, fp, fn)
+    return (2*tp)/(2*tp+fp+fn)
 end
 
 
@@ -89,7 +94,7 @@ function extremes4model(
     location,
     model,
     threshold,
-    samples=50;
+    samples=100;
     time_pred = Date(2013,09,09):Day(1):Date(2020,12,31),
     cut_season=false,
     only_negatives = false,
@@ -167,7 +172,7 @@ function range_extremes4model(
     location,
     model,
     thresholds=90:1:99,
-    samples=50;
+    samples=100;
     kwargs...
 )
     extremes_mean = zeros(length(thresholds))
@@ -191,7 +196,7 @@ function extremes4locations(
     locations,
     model,
     thresholds=90:1:99,
-    samples=50;
+    samples=100;
     #save = true,
     kwargs...
 )
@@ -220,7 +225,7 @@ function extremes4modelslocations(
     models,
     binary_quantifier,
     thresholds=90:1:99,
-    samples=50;
+    samples=100;
     save_extremes = true,
     filename="full",
     kwargs...
@@ -230,6 +235,7 @@ function extremes4modelslocations(
     extremes_std = zeros(length(thresholds), length(models))
 
     for (midx,model) in enumerate(models)
+        println(model)
         exs = extremes4locations(
             locations,
             model,

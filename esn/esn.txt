@@ -1,0 +1,5 @@
+rmse:0.0030159475281834602
+r2: 0.8593
+
+lstms gru rnn
+multistep ahed prediction

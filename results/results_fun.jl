@@ -18,7 +18,7 @@ function ExtremeResults(
     location,
     models,
     thresholds = 90:1:99,
-    samples=50;
+    samples=100;
     extremes_function = extremes4model,
     kwargs...
 )
@@ -65,7 +65,7 @@ function FullResults(
         mape,
         smape,
         nrmse],
-    samples=50;
+    samples=100;
     kwargs...
 )
     
@@ -105,7 +105,7 @@ function compute_all(
     locations,
     models,
     metrics,
-    samples = 50;
+    samples = 100;
     save = true,
     filename = "full_results.jld2",
     kwargs...
@@ -130,7 +130,7 @@ function compute_all_extremes(
     locations,
     models,
     thresholds=90:1:99,
-    samples=50;
+    samples=100;
     save = true,
     filename = "summer_extremes.jld2",
     kwargs...
@@ -182,13 +182,14 @@ test = model_mean_std("IT-Lav", "lstm", skl.mean_absolute_error)
 function results4model(location,
     model,
     acc_measure,
-    samples=50;
+    samples=100;
     mean_std = true,
     cut_season = false,
     only_extremes = false,
     season = ["March" "April" "May" "June" "July" "August" "September" "October" "November"],
     time_pred = Date(2013,09,09):Day(1):Date(2020,12,31),
     threshold=90,
+    binary_quantifier=fscore,
     negative_extremes = false, ######### TODO
     kwargs...
 )
@@ -230,7 +231,7 @@ end
 function mean_std_pred(prediction,
     ground_truth,
     acc_measure,
-    samples=50
+    samples=100
 )
 
     acc_array = fullacc_pred(prediction,
@@ -246,7 +247,7 @@ end
 function fullacc_pred(prediction,
     ground_truth,
     acc_measure,
-    samples=50
+    samples=100
 )
 
     # calc accuracy per run
@@ -485,7 +486,7 @@ function extremes_mean_std(
     location,
     model,
     acc_measure,
-    samples=50
+    samples=100
 )
     ground_truth, prediction = model_location_data(model, location)
 
@@ -493,8 +494,9 @@ function extremes_mean_std(
 end
 
 function model_location_data(
-    model, location, samples=50
+    model, location, samples=100
 )
+    println(model)
     # ground truth data path
     baseline_filename = string("mean_ndvi_sg74$location", ".csv")
     baseline_path = joinpath(
@@ -538,7 +540,7 @@ end
 function metric4extremes(location,
     model,
     acc_measure,
-    samples=50;
+    samples=100;
     time_train=Date(2000,01,01):Day(1):Date(2013,09,08),
     time_pred = Date(2013,09,09):Day(1):Date(2020,12,31),
     threshold=90,
@@ -637,6 +639,7 @@ function extremes4locations(
     only_extremes = true,
     kwargs...
 )
+
 
     for location in locations
         for model in models

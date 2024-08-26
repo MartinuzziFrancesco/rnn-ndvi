@@ -1,8 +1,8 @@
+using TimeSeries
 using CairoMakie
 using ColorSchemes
 using DelimitedFiles
 using Dates
-using TimeSeries
 using Statistics
 using StatsBase
 include(joinpath(dirname(@__FILE__), "variables.jl"))
@@ -26,11 +26,15 @@ fullpage_theme = Theme(
         yticksmirrored = true,
         titlefont = :regular,
         xticksize = 14,
-        yticksize = 14
+        yticksize = 14,
+        xtickwidth = 3,
+        ytickwidth = 3,
+        spinewidth = 3,
     ),
     fontsize=34,
     backgroundcolor = RGBf(1.0, 1.0, 1.0),
     fonts = (; regular = "Arial"),
+
     resolution=(1920, 1080)
 )
 
@@ -38,7 +42,7 @@ set_theme!(fullpage_theme)
 
 colors = ColorSchemes.seaborn_colorblind
 time_pred = Date(2013,09,09):Day(1):Date(2020,12,31)
-models = ["LSTM", "GRU", "RNN_TANH", "ESN"]
+models = ["ESN"]
 models2names = Dict("LSTM"=>"LSTM",
                         "GRU" => "GRU",
                         "RNN_TANH" => "RNN",
@@ -47,7 +51,7 @@ models2names = Dict("LSTM"=>"LSTM",
 chosen_locations = [
     "CZ-Stn",
     "IT-La2",
-    "DE-Obe"
+    "DE-Hai"
 ]
 
 fig = Figure()
@@ -100,7 +104,7 @@ for (idx,location) in enumerate(chosen_locations)
 
         mm = models2names[model]
 
-        lines!(ax, 1:lentime, values(ta_prediction)[:,1],
+        lines!(ax, 1:lentime, values(ta_prediction)[:,2],
             label="$mm",
             color = colors[midx],
             linewidth=1.5)
@@ -214,7 +218,7 @@ for (midx,model) in enumerate(models)
 
     mm = models2names[model]
 
-    lines!(ax, 1:lentime, values(ta_prediction)[:,1],
+    lines!(ax, 1:lentime, values(ta_prediction)[:,2],
         label="$mm",
         color = colors[midx],
         linewidth=5.0)
@@ -238,15 +242,28 @@ elements = [LineElement(
         color=colors[im], 
         linewidth=8.0
     ) for (im,ma) in enumerate(labels)]
+push!(labels, "Target signal")
+push!(elements, LineElement(
+    color=:black, 
+    linewidth=8.0
+    )
+)
+push!(labels, "Extremes")
+push!(elements, LineElement(
+    color=(:grey, 0.3),
+    linewidth=12.0
+    )
+)
 
 Legend(fig_legend[1,1],
         labelsize = 40,
         titlesize = 44,
         elements,
         labels,
-        "Models",
+        "Legend",
         titlefont = :bold,
-        orientation = :horizontal
+        orientation = :horizontal,
+        nbanks = 2
 )
 
 for (label, layout) in zip(["(a)", "(b)"], [figleft, figright])
@@ -257,4 +274,6 @@ for (label, layout) in zip(["(a)", "(b)"], [figleft, figright])
         halign = :right)
 end
 
-save("./ts.eps", fig, dpi=300)
+fig
+
+save("./ts.png", fig, dpi=300)

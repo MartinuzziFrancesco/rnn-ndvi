@@ -45,7 +45,10 @@ fullpage_theme = Theme(
         yticksmirrored = true,
         titlefont = :regular,
         xticksize = 14,
-        yticksize = 14
+        yticksize = 14,
+        xtickwidth = 3,
+        ytickwidth = 3,
+        spinewidth = 3,
     ),
     fontsize=34,
     backgroundcolor = RGBf(1.0, 1.0, 1.0),
@@ -201,4 +204,4 @@ lines!(ax2,
     reduce(hcat,newcc2)[2,:],
     color=:grey)
 fig
-save("ec.eps", fig,dpi=300)
+save("f05.eps", fig,dpi=300)

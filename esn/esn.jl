@@ -5,41 +5,61 @@ using DelimitedFiles, StatsBase, Dates, LinearAlgebra, ReservoirComputing
 @everywhere Pkg.activate(".")
 @everywhere using DelimitedFiles, StatsBase, Dates, LinearAlgebra, ReservoirComputing
 
-@everywhere function do_esn(res_size,
+@everywhere function do_esn(
+    res_size,
     res_radius,
     leaky_coeff,
     ridge_coeff,
     res_sparsity,
     features_train,
-    labels_train,
-    features_test,
-    labels_test;
-    washout = 1000
+    labels_train;
+    washout = 1000,
+    num_splits = 3
 )
     input_scaling = 1.0f-1
     input_builder = DenseLayer(input_scaling)
-    res_sparsity = res_sparsity
     res_builder = RandSparseReservoir(res_size, res_radius, res_sparsity)
     b = zeros(Float32, res_size)
+    driver = ReservoirComputing.RNN(leaky_coefficient=leaky_coeff, activation_function=tanh)
 
-    driver = ReservoirComputing.RNN(leaky_coefficient=leaky_coeff,
-             activation_function=tanh)#tanh
-    
-    esn = ESN(features_train;
-        reservoir = res_builder,
-        input_layer = input_builder,
-        bias = b,
-        reservoir_driver = driver,
-        washout = washout,
-        states_type = PaddedExtendedStates(),
-        nla_type = NLADefault())
+    # Determine the size of each split
+    split_size = Int(floor(size(features_train, 1) / (num_splits + 1)))
+    errors = []
 
-    training_method = StandardRidge(ridge_coeff)
-    output_layer = train(esn, labels_train, training_method)
-    output = esn(Predictive(features_test), output_layer)
-    error = round(rmsd(output, labels_test); digits=6)
-    #error = round(mean([rmsd(output[i,:], labels_test[i,:]) for i in 1:2]); digits=6)
-    output, error
+    for i in 1:num_splits
+        # Determine the indices for training and validation
+        val_start = (i - 1) * split_size + 1
+        val_end = i * split_size
+
+        # Split the features and labels into training and validation sets
+        train_features = vcat(features_train[1:val_start-1, :], features_train[val_end+1:end, :])
+        train_labels = vcat(labels_train[1:val_start-1, :], labels_train[val_end+1:end, :])
+
+        val_features = features_train[val_start:val_end, :]
+        val_labels = labels_train[val_start:val_end, :]
+
+        # Build and train the ESN
+        esn = ESN(train_features;
+            reservoir = res_builder,
+            input_layer = input_builder,
+            bias = b,
+            reservoir_driver = driver,
+            washout = washout,
+            states_type = PaddedExtendedStates(),
+            nla_type = NLADefault())
+
+        training_method = StandardRidge(ridge_coeff)
+        output_layer = train(esn, train_labels, training_method)
+
+        # Evaluate the model on the validation set
+        output = esn(Predictive(val_features), output_layer)
+        error = round(rmsd(output, val_labels); digits=6)
+        push!(errors, error)
+    end
+
+    # Compute the average error across all splits
+    avg_error = mean(errors)
+    avg_error
 end
 
 locations = ["IT-Lav",
@@ -105,7 +125,7 @@ locations = ["IT-Lav",
                 for l in ridge_coeffs
                     for c in res_sparsitys
                         o, e = do_esn(i, j, k, l, c,
-                            features_train, labels_train, features_test, labels_test
+                            features_train, labels_train
                         )
                         println(location, e)
                         isdir(data_path*"results/$location") ? nothing : mkdir(data_path*"results/$location")
@@ -161,7 +181,7 @@ end
         idx = findall(x->x==ordered_accuracy[1], hyper_results)[1][1]
         rsize, rradius, leaky, regr, spar  = hyper_results[idx,1:5]
         output, error = do_esn(Int64(rsize), rradius, leaky, regr, spar,
-            features_train, labels_train, features_test, labels_test)
+            features_train, labels_train)
         results[:,i] = output
     end
     println("end loop")

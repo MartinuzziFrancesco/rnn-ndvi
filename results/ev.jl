@@ -104,7 +104,10 @@ fullpage_theme = Theme(
         yticksmirrored = true,
         titlefont = :regular,
         xticksize = 14,
-        yticksize = 14
+        yticksize = 14,
+        xtickwidth = 3,
+        ytickwidth = 3,
+        spinewidth = 3,
     ),
     fontsize=34,
     backgroundcolor = RGBf(1.0, 1.0, 1.0),
@@ -169,6 +172,12 @@ vlines!(uax, [5110],
     linewidth=3.0,
     linestyle = :dash,
     color=:grey)
+
+Label(upf[1, 1, Top()], "T",
+        fontsize = 32,
+        padding = (542, 3, 3, 0),
+        halign = :center,
+        color=:grey)
 fig
 
 Label(rightlowf[1, 1, Top()], "Testing data", valign = :bottom,
